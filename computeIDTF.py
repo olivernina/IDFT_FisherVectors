@@ -18,10 +18,10 @@ python computeIDTF.py video_list.txt output_directory
 
 """
 #Path to the video repository
-ucf101_path = "/Users/Bryan/CS/CS_Research/data/UCF101"
+ucf101_path = "/media/onina/sea2/datasets/UCF-101"
 
 # Improved Dense Trajectories binary
-dtBin = '/Users/Bryan/CS/CS_Research/code/improved_trajectory_release/release/DenseTrackStab'
+dtBin = '/media/onina/SSD/tools/improved_trajectory_release/release/DenseTrackStab'
 
 # Temp directory to store resized videos
 tmpDir = './tmp'
@@ -38,10 +38,15 @@ def extract(videoName, outputBase):
     if not os.path.exists(videoName):
         print '%s does not exist!' % videoName
         return False
+    if not os.path.exists(tmpDir):
+        os.mkdir(tmpDir)
     resizedName = os.path.join(tmpDir, os.path.basename(videoName))
     if not ffmpeg.resize(videoName, resizedName):
         resizedName = videoName     # resize failed, just use the input video
-    subprocess.call('%s %s > %s' % (dtBin, resizedName, outputBase), shell=True)
+
+    if not os.path.exists(outputBase):
+        subprocess.call('%s %s > %s' % (dtBin, resizedName, outputBase), shell=True)
+
     return True
 
 
@@ -75,8 +80,8 @@ if __name__ == '__main__':
         f.close()
         videos = [video.rstrip() for video in videos]
         for i in range(0, len(videos)):
-            outputName = os.path.join(outputBase, os.path.basename(videos[i])[:-4]+".features")
-            videoLocation = os.path.join(ucf101_path,videos[i])
+            outputName = os.path.join(outputBase, os.path.basename(videos[i]).split('.avi')[0]+".features")
+            videoLocation = os.path.join(ucf101_path,videos[i].split(' ')[0])
             print "generating IDTF for %s" % (videos[i],)
             extract(videoLocation, outputName)
             print "completed."

@@ -21,8 +21,9 @@ def resize(videoName, resizedName):
     reso = re.findall(r'Video.*, ([0-9]+)x([0-9]+)', err)
     if len(reso) < 1:
         return False
-    # call ffmpeg again to resize
-    subprocess.call([ffmpeg, '-i', videoName, '-s', '320x240', resizedName])
+    if not os.path.exists(resizedName):
+        # call ffmpeg again to resize
+        subprocess.call([ffmpeg, '-i', videoName, '-s', '320x240', resizedName])
     return check(resizedName)
 
 # check if the video file is corrupted or not
