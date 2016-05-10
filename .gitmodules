@@ -1,0 +1,3 @@
+[submodule "yael"]
+	path = yael
+	url = https://github.com/Erotemic/yael.git
