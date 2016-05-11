@@ -5,13 +5,15 @@
 
 import numpy as np
 import os
-TRAJ_DIM=30
-HOG_DIM=96
-HOF_DIM=108
-MBHX_DIM=96
-MBHY_DIM=96
 
-#Represents a single IDTF feature
+TRAJ_DIM = 30
+HOG_DIM = 96
+HOF_DIM = 108
+MBHX_DIM = 96
+MBHY_DIM = 96
+
+
+# Represents a single IDTF feature
 class IDTFeature(object):
     def __init__(self, line):
         ll = line.strip().split()
@@ -25,7 +27,7 @@ class IDTFeature(object):
         self.x_pos = float(ll[7])
         self.y_pos = float(ll[8])
         self.t_pos = float(ll[9])
-        traj_start =10
+        traj_start = 10
         hog_start = traj_start + TRAJ_DIM
         hof_start = hog_start + HOG_DIM
         mbhx_start = hof_start + HOF_DIM
@@ -38,29 +40,32 @@ class IDTFeature(object):
         self.mbhy = [float(l) for l in ll[mbhy_start:mbhy_end]]
 
 
-#Populates an np.ndarray for each of the descriptors in an IDTF feature
+# Populates an np.ndarray for each of the descriptors in an IDTF feature
 # traj, hog, hof, mbhx, mbhy
 class vid_descriptors(object):
-	#input is a list of IDTFs objects (as specified by the above IDTFeature class) which represent the features of a video.
-	def __init__(self, IDTFeatures):
+    # input is a list of IDTFs objects (as specified by the above IDTFeature class) which represent the features of a video.
+    def __init__(self, IDTFeatures):
+        trajs = []
+        hogs = []
+        hofs = []
+        mbhxs = []
+        mbhys = []
+        for feature in IDTFeatures:
+            if len(feature.hof)< HOF_DIM or len(feature.mbhx)<MBHX_DIM:
+                continue
+            trajs.append(np.ndarray(shape=(1, TRAJ_DIM), buffer=np.array(feature.traj), dtype=float))
+            hogs.append(np.ndarray(shape=(1, HOG_DIM), buffer=np.array(feature.hog), dtype=float))
 
-		trajs = []
-		hogs = []
-		hofs = []
-		mbhxs = []
-		mbhys = []
-		for feature in IDTFeatures:
-			trajs.append(np.ndarray(shape=(1,TRAJ_DIM), buffer=np.array(feature.traj),dtype=float))
-			hogs.append(np.ndarray(shape=(1,HOG_DIM), buffer=np.array(feature.hog),dtype=float))
-			hofs.append(np.ndarray(shape=(1,HOF_DIM), buffer=np.array(feature.hof),dtype=float))
-			mbhxs.append(np.ndarray(shape=(1,MBHX_DIM), buffer=np.array(feature.mbhx),dtype=float))
-			mbhys.append(np.ndarray(shape=(1,MBHY_DIM), buffer=np.array(feature.mbhy),dtype=float))
+            hofs.append(np.ndarray(shape=(1, HOF_DIM), buffer=np.array(feature.hof), dtype=float))
+            # print feature.mbhx
+            mbhxs.append(np.ndarray(shape=(1, MBHX_DIM), buffer=np.array(feature.mbhx), dtype=float))
+            mbhys.append(np.ndarray(shape=(1, MBHY_DIM), buffer=np.array(feature.mbhy), dtype=float))
 
-		self.traj = np.vstack(trajs)
-		self.hog = np.vstack(hogs)
-		self.hof = np.vstack(hofs)
-		self.mbhx = np.vstack(mbhxs)
-		self.mbhy = np.vstack(mbhys)
+        self.traj = np.vstack(trajs)
+        self.hog = np.vstack(hogs)
+        self.hof = np.vstack(hofs)
+        self.mbhx = np.vstack(mbhxs)
+        self.mbhy = np.vstack(mbhys)
 
 
 ################################################################
@@ -69,50 +74,51 @@ class vid_descriptors(object):
 
 
 
-#Returns a tuple (trajs, hogs, hofs, mbhxs, mbhys) where each element is a list of of np.ndarray of type of descriptor.
-#Each np.ndarray in the list is a matrix concatenating together all of the descriptors of that particular type for a
-#given video.
+# Returns a tuple (trajs, hogs, hofs, mbhxs, mbhys) where each element is a list of of np.ndarray of type of descriptor.
+# Each np.ndarray in the list is a matrix concatenating together all of the descriptors of that particular type for a
+# given video.
 # So the length of each list will be the number of videos names provided in the vid_features input list
 #
 # directory: Directory where the input videos are located
 # vid_features: a list of names of videos.
 def populate_descriptors(directory, vid_features):
-  vid_trajs = []
-  vid_hogs = []
-  vid_hofs = []
-  vid_mbhxs = []
-  vid_mbhys = []
-  for vid_feature in vid_features:
-    vid_desc = vid_descriptors(read_IDTF_file(directory,vid_feature))
-    vid_trajs.append(vid_desc.traj)
-    vid_hogs.append(vid_desc.hog)
-    vid_hofs.append(vid_desc.hof)
-    vid_mbhxs.append(vid_desc.mbhx)
-    vid_mbhys.append(vid_desc.mbhy)
-  return (vid_trajs, vid_hogs, vid_hofs, vid_mbhxs, vid_mbhys)
+    vid_trajs = []
+    vid_hogs = []
+    vid_hofs = []
+    vid_mbhxs = []
+    vid_mbhys = []
+    for vid_feature in vid_features:
+        vid_desc = vid_descriptors(read_IDTF_file(directory, vid_feature))
+        vid_trajs.append(vid_desc.traj)
+        vid_hogs.append(vid_desc.hog)
+        vid_hofs.append(vid_desc.hof)
+        vid_mbhxs.append(vid_desc.mbhx)
+        vid_mbhys.append(vid_desc.mbhy)
+    return (vid_trajs, vid_hogs, vid_hofs, vid_mbhxs, vid_mbhys)
 
 
-#returns a list of vid_descriptors objects.
+# returns a list of vid_descriptors objects.
 def list_descriptors(directory, vid_features):
     vid_descs = []
     for vid_feature in vid_features:
-      vid_descs.append(vid_descriptors(read_IDTF_file(directory,vid_feature)))
+        vid_descs.append(vid_descriptors(read_IDTF_file(directory, vid_feature)))
     return vid_descs
 
-#returns a list of vid_descriptors objects, at the specified indices
+
+# returns a list of vid_descriptors objects, at the specified indices
 def list_descriptors_sampled(directory, vid_features, validIndices):
     vid_descs = []
     current_line = 0
-    VI_index = 0 #Index in the validIndices sorted list
+    VI_index = 0  # Index in the validIndices sorted list
 
     def read_file(vid, CL, VI):
         points = []
-        with open(os.path.join(directory,vid), 'r') as f:
+        with open(os.path.join(directory, vid), 'r') as f:
             for line in f:
                 if VI < len(validIndices):
                     if CL == validIndices[VI]:
                         points.append(IDTFeature(line))
-                        VI+=1
+                        VI += 1
                 CL += 1
         toReturn = (points, CL, VI)
         return toReturn
@@ -124,7 +130,7 @@ def list_descriptors_sampled(directory, vid_features, validIndices):
     return vid_descs
 
 
-#Provided a list of vid_descriptors objects, concatenates the
+# Provided a list of vid_descriptors objects, concatenates the
 # each np.ndarray descriptor type (e.g. each traj, hogs, hofs, ...)
 # into a large np.ndarray matrix.
 # Returns a list of 5 large np.ndarray matrices.
@@ -140,9 +146,9 @@ def bm_descriptors(descriptors_list):
         vid_hofs.append(desc.hof)
         vid_mbhxs.append(desc.mbhx)
         vid_mbhys.append(desc.mbhy)
-    #make each of the descriptor lists into a big matrix.
+    # make each of the descriptor lists into a big matrix.
     bm_list = []
-    #The indices of the elements in the list are as follows:
+    # The indices of the elements in the list are as follows:
     # bm_list[0] >>> trajs
     # bm_list[1] >>> hogs
     # bm_list[2] >>> hofs
@@ -156,15 +162,14 @@ def bm_descriptors(descriptors_list):
     return bm_list
 
 
-
 # Parses a video's IDTF file and returns a set of points where each point is
 # is an IDTF feature.
-def read_IDTF_file(directory,vid_feature):
+def read_IDTF_file(directory, vid_feature):
     points = []
-    with open(os.path.join(directory,vid_feature), 'r') as f:
-      #counter = 0
-      for line in f:
-        #if counter == 20: break
-        points.append(IDTFeature(line))
-        #counter += 1
+    with open(os.path.join(directory, vid_feature), 'r') as f:
+        # counter = 0
+        for line in f:
+            # if counter == 20: break
+            points.append(IDTFeature(line))
+            # counter += 1
     return points

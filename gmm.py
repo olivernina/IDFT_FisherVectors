@@ -12,7 +12,7 @@ from tempfile import TemporaryFile
 import argparse
 
 GMM_dir = "./GMM_IDTFs"
-
+GMM_dir = "/media/onina/sea2/datasets/UCF-IDTF"
 
 def populate_gmms(sample_vids, GMM_OUT, k_gmm, sample_size=1500000, PCA=False):
     """
